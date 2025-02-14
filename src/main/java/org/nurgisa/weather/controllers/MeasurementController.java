@@ -18,6 +18,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/measurements")
@@ -34,6 +35,28 @@ public class MeasurementController {
         this.measurementValidator = measurementValidator;
         this.modelMapper = modelMapper;
         this.sensorService = sensorService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<MeasurementDTO>> getMeasurements() {
+        List<Measurement> measurements = measurementService.findAll();
+
+        List<MeasurementDTO> measurementDTOs = measurements
+                .stream()
+                .map(this::convertToMeasurementDTO)
+                .toList();
+
+        return new ResponseEntity<>(measurementDTOs, HttpStatus.OK); // 200
+    }
+
+    @GetMapping("/rainyDaysCount")
+    public ResponseEntity<List<MeasurementDTO>> getRainyDaysCount() {
+        return ResponseEntity.ok(
+                measurementService.findRainyDays()
+                        .stream()
+                        .map(this::convertToMeasurementDTO)
+                        .toList()
+        );
     }
 
     @PostMapping("/add")
@@ -82,5 +105,9 @@ public class MeasurementController {
         measurement.setSensor(sensor);
 
         return measurement;
+    }
+
+    private MeasurementDTO convertToMeasurementDTO(Measurement measurement) {
+        return modelMapper.map(measurement, MeasurementDTO.class);
     }
 }
